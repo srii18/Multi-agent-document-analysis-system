@@ -97,9 +97,9 @@ Using Docker Compose, everything runs in containers: Ollama, MCP Server, and the
    ```
    
    This will:
-   - Download and run Ollama container
+   - Download and run Ollama container with health checks
    - Automatically pull `llama3.2` model (first run takes time)
-   - Start the MCP Server (on `http://localhost:8000`)
+   - Start the MCP Server (on `http://localhost:8000`) with health checks
    - Start the Orchestrator in interactive mode
    
 3. **Stop services**:
@@ -108,6 +108,12 @@ Using Docker Compose, everything runs in containers: Ollama, MCP Server, and the
    ```
 
 **First run**: The orchestrator container will wait for Ollama to finish downloading the model. This may take 5-10 minutes on first boot.
+
+**Docker Improvements**: The docker-compose configuration now includes:
+  - Enhanced health checks for Ollama (30 retries with 60s startup period)
+  - Health checks for MCP Server endpoints
+  - Explicit build context configuration
+  - LOG_LEVEL environment variable for better debugging
 
 #### Option 2: Local Setup (Manual)
 
@@ -362,14 +368,17 @@ LOG_LEVEL=DEBUG
 - ✅ Comprehensive configuration management
 - ✅ Detailed documentation and examples
 - ✅ Error handling and logging
+- ✅ Full containerization with Docker Compose
+- ✅ Health checks and resilient service orchestration
+- ✅ Updated dependencies (Pydantic 2.9.0, NumPy <2.0)
 
 ### Areas for Improvement
 - 🔄 Semantic search with embeddings (currently keyword-based)
 - 🔄 Real-time document updates
 - 🔄 Performance metrics collection
-- 🔄 Containerization (Docker support)
 - 🔄 Advanced caching strategies
 - 🔄 Multi-language support
+- 🔄 Kubernetes deployment manifests
 
 ### Success Criteria Met
 - ✅ MCP endpoints return correct format
