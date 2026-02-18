@@ -169,6 +169,7 @@ cython_debug/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+OllamaSetup.exe
 
 # Ollama models (large files)
 *.ollama

@@ -47,8 +47,8 @@ class SpecialistAgent:
     
     def _build_prompt(self, question: str, context: Dict[str, Any] = None) -> str:
         """Build the prompt for the Specialist Agent."""
-        
-        system_prompt = """You are a meticulous technical analyst. Your job is to synthesize a clear, concise answer based only on the provided context and the user's question.
+        if context and context.get("snippets"):
+            system_prompt = """You are a meticulous technical analyst. Your job is to synthesize a clear, concise answer based only on the provided context and the user's question.
 
 RULES:
 1. Answer ONLY from the provided context
@@ -65,7 +65,6 @@ Sources Referenced:
 [1] filename.md (Section: Section Name)
 [2] filename.md (Section: Section Name)"""
 
-        if context and context.get("snippets"):
             # Format the retrieved snippets
             context_text = "RETRIEVED CONTEXT:\n\n"
             for i, snippet in enumerate(context["snippets"], 1):
@@ -77,6 +76,9 @@ Sources Referenced:
             
             user_prompt = f"User Question: {question}\n\n{context_text}\n\nBased on the provided context, please answer the user's question."
         else:
+            system_prompt = """You are a helpful technical assistant. Answer the user's question clearly and directly.
+
+If the user requests citations or references, say that no internal sources were provided for citation."""
             user_prompt = f"User Question: {question}\n\nNo specific context was provided. Please answer based on general knowledge."
         
         return f"{system_prompt}\n\n{user_prompt}"

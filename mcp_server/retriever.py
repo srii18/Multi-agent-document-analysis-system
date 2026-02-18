@@ -85,14 +85,15 @@ class DocumentRetriever:
         """Calculate relevance score based on keyword frequency."""
         content_lower = content.lower()
         score = 0
+        phrase = " ".join(query_terms).strip()
         
         for term in query_terms:
             # Count occurrences of the term
             term_count = content_lower.count(term)
             score += term_count
-            
-            # Bonus for exact phrase matches
-            if ' '.join(query_terms) in content_lower:
-                score += 5
+
+        # Bonus for exact phrase matches (count once, not per-term)
+        if phrase and phrase in content_lower:
+            score += 5
         
         return score

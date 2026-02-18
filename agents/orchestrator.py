@@ -6,10 +6,18 @@ This script orchestrates the interaction between the Manager Agent and Specialis
 to answer user questions using the MCP document retrieval server.
 """
 
+import os
+import sys
 import argparse
 import logging
 import time
 from typing import Optional
+
+# Allow running this file directly (python agents/orchestrator.py) from repo root.
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
 from config import Config
 from agents.manager import ManagerAgent
 from agents.specialist import SpecialistAgent

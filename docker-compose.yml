@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Ollama service - provides the LLM
+  ollama:
+    image: ollama/ollama:latest
+    container_name: doc-analysis-ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - doc-analysis-network
+
+  # MCP Server service - document retrieval
+  mcp-server:
+    build: .
+    container_name: doc-analysis-mcp-server
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_PROVIDER=ollama
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - MODEL_NAME=llama3.2
+    depends_on:
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ./knowledge_base:/app/knowledge_base
+    command: python mcp_server/server.py
+    networks:
+      - doc-analysis-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Orchestrator service - runs the multi-agent workflow
+  orchestrator:
+    build: .
+    container_name: doc-analysis-orchestrator
+    environment:
+      - LLM_PROVIDER=ollama
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - MODEL_NAME=llama3.2
+      - MCP_SERVER_URL=http://mcp-server:8000
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    volumes:
+      - ./knowledge_base:/app/knowledge_base
+    command: python agents/orchestrator.py --interactive
+    stdin_open: true
+    tty: true
+    networks:
+      - doc-analysis-network
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  doc-analysis-network:
+    driver: bridge

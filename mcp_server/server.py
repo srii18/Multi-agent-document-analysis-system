@@ -1,6 +1,14 @@
+import os
+import sys
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+
+# Allow running this file directly (python mcp_server/server.py) from repo root.
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
 from config import Config
 from mcp_server.models import (
     ToolsListResponse, ToolSpecification, ToolExecutionRequest, 
@@ -83,7 +91,7 @@ async def root():
 if __name__ == "__main__":
     print(f"Starting MCP Server on {Config.MCP_SERVER_HOST}:{Config.MCP_SERVER_PORT}")
     uvicorn.run(
-        "server:app",
+        "mcp_server.server:app",
         host=Config.MCP_SERVER_HOST,
         port=Config.MCP_SERVER_PORT,
         reload=True

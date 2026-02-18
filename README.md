@@ -84,10 +84,40 @@ multi-agent-doc-analysis/
 
 ### Running the System
 
+#### Option 1: Docker (Recommended - Fully Containerized)
+
+Using Docker Compose, everything runs in containers: Ollama, MCP Server, and the Orchestrator.
+
+1. **Install Docker and Docker Compose** (if not already installed):
+   - [Docker Desktop](https://www.docker.com/products/docker-desktop) (includes Docker Compose)
+
+2. **Start all services**:
+   ```bash
+   docker-compose up
+   ```
+   
+   This will:
+   - Download and run Ollama container
+   - Automatically pull `llama3.2` model (first run takes time)
+   - Start the MCP Server (on `http://localhost:8000`)
+   - Start the Orchestrator in interactive mode
+   
+3. **Stop services**:
+   ```bash
+   docker-compose down
+   ```
+
+**First run**: The orchestrator container will wait for Ollama to finish downloading the model. This may take 5-10 minutes on first boot.
+
+#### Option 2: Local Setup (Manual)
+
+If you prefer to run components locally:
+
 1. **Start the MCP Server** (Terminal 1):
    ```bash
    python mcp_server/server.py
    ```
+   - Serves on `http://localhost:8000`
 
 2. **Run the orchestrator** (Terminal 2):
    ```bash
@@ -284,6 +314,36 @@ python agents/orchestrator.py -q "What are Q4 revenue targets?"
    
    # Check configuration loading
    python -c "from config import Config; print(Config.MODEL_NAME)"
+   ```
+
+### Docker Troubleshooting
+
+1. **Ollama still downloading model on startup**:
+   - First run downloads the `llama3.2` model (~4-5 GB)
+   - Check logs: `docker-compose logs ollama`
+   - Wait for "success" message before querying
+
+2. **Port conflicts**:
+   - Ollama: 11434
+   - MCP Server: 8000
+   - To use different ports, edit `docker-compose.yml` or override:
+     ```bash
+     docker-compose up -p 8001:8000
+     ```
+
+3. **Rebuild containers** (if requirements change):
+   ```bash
+   docker-compose build --no-cache
+   ```
+
+4. **View live logs**:
+   ```bash
+   docker-compose logs -f orchestrator
+   ```
+
+5. **Run a single query without interactive mode**:
+   ```bash
+   docker-compose run orchestrator python agents/orchestrator.py --query "Your question here?"
    ```
 
 ### Logging

@@ -37,9 +37,12 @@ class ManagerAgent:
         decision = self._make_tool_decision(user_question)
         logger.info(f"Tool decision: {decision}")
         
-        if decision["use_tool"]:
+        use_tool = bool(decision.get("use_tool", True))
+        query = (decision.get("query") or "").strip()
+
+        if use_tool:
             # Step 2: Extract search query and call MCP server
-            search_query = decision["query"]
+            search_query = query or user_question
             logger.info(f"Searching with query: {search_query}")
             
             retrieved_context = self._call_mcp_server(search_query)
@@ -81,9 +84,27 @@ Response: {"use_tool": false, "query": "", "reason": "General knowledge question
         try:
             if self.llm_provider == "ollama":
                 response = self._call_ollama(question, system_prompt)
-                # Parse JSON response
-                decision = json.loads(response.strip())
-                return decision
+            else:
+                raise ValueError(f"Unsupported LLM provider: {self.llm_provider}")
+
+            # Parse JSON response (LLMs sometimes wrap JSON in text)
+            text = (response or "").strip()
+            try:
+                decision = json.loads(text)
+            except json.JSONDecodeError:
+                start = text.find("{")
+                end = text.rfind("}")
+                if start != -1 and end != -1 and end > start:
+                    decision = json.loads(text[start : end + 1])
+                else:
+                    raise
+
+            # Normalize shape
+            return {
+                "use_tool": bool(decision.get("use_tool", True)),
+                "query": (decision.get("query") or "").strip(),
+                "reason": (decision.get("reason") or "").strip(),
+            }
         except Exception as e:
             logger.error(f"Error in tool decision: {e}")
             # Default to using tool if there's an error
